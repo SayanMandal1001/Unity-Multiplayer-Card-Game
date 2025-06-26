@@ -4,7 +4,7 @@
 
 Author: Sayan Mandal
 
-This is a project for the Summer Of Code (SOC) 2025 under the guidance of mentor Vedant Parkhe.
+This is a project for the Summer Of Code (SOC) 2025 under the guidance of mentor Vedant Parkhe. You can learn about the game [here](https://en.wikipedia.org/wiki/Cabo_(game)). This is a local variation of it.
 
 ## Things I got to learn
 
