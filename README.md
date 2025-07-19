@@ -15,4 +15,17 @@ This is a project for the Summer Of Code (SOC) 2025 under the guidance of mentor
 - Managing reconnection of players who lost their connection.
 - Upload the whole project to the GitHub Repository.
 
-Note: This is the project file for the game and does not contain the final playable application that runs the game. To do so open the project in the Unity Editor and then 'Build' it.
+## Instructions to run the game(application)
+
+1. Clone the repository:
+    ```bash
+    git clone "https://github.com/SayanMandal1001/Unity-Multiplayer-Card-Game"
+    ```
+2. Locate the folder "Kabo"
+    ```bash
+    cd Kabo
+    ```
+3. Run the .exe file present in it
+    ```bash
+    ./Kabo.exe
+    ```
