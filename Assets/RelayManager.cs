@@ -11,9 +11,9 @@ using UnityEngine.UI;
 
 public class RelayManager : MonoBehaviour
 {
-    public Text CreatePlayerNameText;
-    public Text JoinPlayerNameText;
-    public Text JoinRoomCodeText;
+    public InputField CreatePlayerNameText;
+    public InputField JoinPlayerNameText;
+    public InputField JoinRoomCodeText;
 
     public GameManager gameManager;
     public GameFlowManager gameFlowManager;
@@ -21,15 +21,17 @@ public class RelayManager : MonoBehaviour
     private async void Start()
     {
         await UnityServices.InitializeAsync();
-
-        AuthenticationService.Instance.SignedIn += () =>
+        if (!AuthenticationService.Instance.IsSignedIn)
         {
-            Debug.Log("Signed in " + AuthenticationService.Instance.PlayerId);
-            gameManager.playerAuthenticationID = AuthenticationService.Instance.PlayerId;
+            AuthenticationService.Instance.SignedIn += () =>
+            {
+                Debug.Log("Signed in " + AuthenticationService.Instance.PlayerId);
+                gameManager.playerAuthenticationID = AuthenticationService.Instance.PlayerId;
 
-        };
+            };
 
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        }
     }
 
     public void CreateRelayButton()

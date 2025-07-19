@@ -8,6 +8,8 @@ public class CardSlotManager : MonoBehaviour
     [SerializeField] private position Position;
     private GameManager gameManager;
 
+    private bool enteredHover=false;
+
     private void Start()
     {
         if (Owner <= (owner)6) transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = false;
@@ -59,13 +61,63 @@ public class CardSlotManager : MonoBehaviour
                     this.gameObject.GetComponent<SpriteRenderer>().enabled = true;
                     if (Owner == (owner)gameManager.playerId)
                     {
-                        if (gameManager.canReplace || gameManager.canStack || gameManager.canSeeSelfCard || gameManager.canSeenSwap || gameManager.canUnseenSwap || gameManager.canGiveOtherACard) transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = true;
-                        else transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                        if (gameManager.canReplace || gameManager.canStack || gameManager.canSeeSelfCard || gameManager.canSeenSwap || gameManager.canUnseenSwap || gameManager.canGiveOtherACard)
+                        {
+                            transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = true;
+                            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                            Collider2D hit = Physics2D.OverlapPoint(mousePos);
+
+                            if (hit && hit.gameObject == gameObject)
+                            {
+                                if(!enteredHover)
+                                {
+                                    Debug.Log("Mouse is hovering");
+                                    transform.GetChild(0).GetComponent<Animator>().SetBool("playHoverAnimation", true);
+                                    enteredHover = true;
+                                }
+                            }
+                            else
+                            {
+                                enteredHover = false;
+                                transform.GetChild(0).GetComponent<Animator>().SetBool("playHoverAnimation", false);
+                            }
+                        }
+                        else
+                        {
+                            enteredHover=false;
+                            transform.GetChild(0).GetComponent<Animator>().SetBool("playHoverAnimation", false);
+                            transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                        }
                     }
                     else
                     {
-                        if (gameManager.canStack || gameManager.canSeeOthersCard || gameManager.canUnseenSwap) transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = true;
-                        else transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                        if (gameManager.canStack || gameManager.canSeeOthersCard || gameManager.canUnseenSwap)
+                        {
+                            transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = true;
+                            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                            Collider2D hit = Physics2D.OverlapPoint(mousePos);
+
+                            if (hit && hit.gameObject == gameObject)
+                            {
+                                if (!enteredHover)
+                                {
+                                    Debug.Log("Mouse is hovering");
+                                    transform.GetChild(0).GetComponent<Animator>().SetBool("playHoverAnimation", true);
+                                    enteredHover = true;
+                                }
+                            }
+                            else
+                            {
+                                enteredHover = false;
+                                transform.GetChild(0).GetComponent<Animator>().SetBool("playHoverAnimation", false);
+                            }
+                        }
+                        else
+                        {
+                            enteredHover = false ;
+                            transform.GetChild(0).GetComponent<Animator>().SetBool("playHoverAnimation", false);
+                            transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                        }
                     }
                     if (gameManager.seenCardIndex != -1)
                     {

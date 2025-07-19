@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.UIElements;
 using Random = UnityEngine.Random;
 
 public class TitleScreenManager : MonoBehaviour
@@ -19,9 +21,17 @@ public class TitleScreenManager : MonoBehaviour
 
     private bool shouldInitialise = false;
 
+    public GameObject settingsButton;
+    public GameObject settingsPanel;
+    public GameObject playButton;
+
+    public AudioManager audioManager;
+
     private void Start()
     {
         startAnimation();
+        settingsCloseButton();
+        audioManager = AudioManager.instance;
     }
 
     public void startAnimation()
@@ -107,4 +117,53 @@ public class TitleScreenManager : MonoBehaviour
             }
         }
     }
+
+    public void settingsOpenButton()
+    {
+        settingsButton.SetActive(false);
+        settingsPanel.SetActive(true);
+        playButton.SetActive(false);
+
+        foreach (Sound s in audioManager.sounds)
+        {
+            if (s.name == "BackgroundMusic")
+            {
+                settingsPanel.transform.GetChild(0).transform.GetChild(1).GetComponent<UnityEngine.UI.Slider>().value = s.volume;
+            }
+            else
+            {
+                settingsPanel.transform.GetChild(1).transform.GetChild(1).GetComponent<UnityEngine.UI.Slider>().value = s.volume;
+            }
+        }
+
+    }
+    public void settingsCloseButton()
+    {
+        settingsButton.SetActive(true);
+        settingsPanel.SetActive(false);
+        playButton.SetActive(true);
+    }
+
+    public void musicSliderChange(UnityEngine.UI.Slider slider)
+    {
+        foreach(Sound s in audioManager.sounds)
+        {
+            if(s.name == "BackgroundMusic")
+            {
+                s.volume = slider.value;
+            }
+        }
+    }
+
+    public void SFXSliderChange(UnityEngine.UI.Slider slider)
+    {
+        foreach (Sound s in audioManager.sounds)
+        {
+            if (s.name != "BackgroundMusic")
+            {
+                s.volume = slider.value;
+            }
+        }
+    }
+
 }

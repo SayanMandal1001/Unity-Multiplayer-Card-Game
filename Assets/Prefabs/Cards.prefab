@@ -3055,6 +3055,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Deck01_Club_2
       objectReference: {fileID: 0}
+    - target: {fileID: 3508646098779102641, guid: 5df7bb60bbb714418916a5b83049fe50, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 423359035
+      objectReference: {fileID: 0}
     - target: {fileID: 4659431679257822542, guid: 5df7bb60bbb714418916a5b83049fe50, type: 3}
       propertyPath: m_Enabled
       value: 0

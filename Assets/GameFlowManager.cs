@@ -1,11 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameFlowManager : MonoBehaviour
 {
-    public GameObject TitleScreen;
-    public GameObject TitleScreenUI;
     public GameObject Board;
     public GameObject RelayUI;
     public GameObject WaitingAreaUI;
@@ -14,30 +13,40 @@ public class GameFlowManager : MonoBehaviour
 
     public GameManager gameManager;
 
+    public bool isGameScene;
+
     // Start is called before the first frame update
     void Start()
     {
-        ToTitleScreen();
+        //ToTitleScreen();
+        if(isGameScene)
+        {
+            Show(Board);
+            Show(RelayUI);
+            Hide(WaitingAreaUI);
+            Hide(MainGameArea);
+            Hide(MainGameAreaUI);
+        }
     }
 
     public void ToTitleScreen()
     {
-        Show(TitleScreen);
+        /*Show(TitleScreen);
         Show(TitleScreenUI);
         Hide(Board);
         Hide(RelayUI);
         Hide(WaitingAreaUI);
         Hide(MainGameArea);
-        Hide(MainGameAreaUI);
+        Hide(MainGameAreaUI);*/
+        SceneManager.LoadSceneAsync("TitleScreen");
     }
 
     public void ToRelayScreen()
     {
-        Hide(TitleScreen);
-        Hide(TitleScreenUI);
-        Show(Board);
-        Show(RelayUI);
-        Hide(WaitingAreaUI);
+        //Hide(TitleScreen);
+        //Hide(TitleScreenUI);
+        SceneManager.LoadSceneAsync("Game");
+        
     }
 
     public void ToWaitingArea()
@@ -53,6 +62,8 @@ public class GameFlowManager : MonoBehaviour
         Show(MainGameAreaUI);
         gameManager.setPlayerIdText();
         gameManager.SetCorrectOwnerToCardSlots();
+        if (gameManager.playerId == 1) gameManager.generalText.text = "Press START to deal out the cards";
+        if (gameManager.playerId != 1) gameManager.generalText.text = "Waiting for the host to deal cards";
     }
 
     private void Show(GameObject gameObject)

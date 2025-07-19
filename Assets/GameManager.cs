@@ -108,7 +108,7 @@ public class GameManager : NetworkBehaviour
     public ulong playerId = (ulong)0;
     public string playerName;
     public string[] playerNames = new string[4];
-    public string playerAuthenticationID;
+    public string playerAuthenticationID = "";
     public string[] playerAuthenticationIDs = new string[4];
     [SerializeField] private ulong currentTurnPlayerId;
     [NonSerialized] private ulong playerIdToStart = 0;
@@ -148,6 +148,7 @@ public class GameManager : NetworkBehaviour
     [NonSerialized] public int ownSwapCardIndex = -1;
 
     [NonSerialized] public ulong kaboCalledByPlayerId = 0;
+    [NonSerialized] public ulong cardFinishedAtPlayerTurnId = 0;
     [NonSerialized] public bool isRoundOver = false;
     [NonSerialized] public bool isGameOver = false;
     [NonSerialized] public int[] playerScore = new int[4];
@@ -163,11 +164,14 @@ public class GameManager : NetworkBehaviour
     public GameObject DoneButton;
     public GameObject SkipButton;
     public GameObject SwapButton;
+    public Text generalText;
 
     public GameObject GameOverPanel;
     public WaitingAreaUIManager waitingAreaUIManager;
 
     [NonSerialized] public float t;
+
+    private AudioManager audioManager;
 
     public void SetPlayerName(string pName)
     {
@@ -250,6 +254,10 @@ public class GameManager : NetworkBehaviour
         StartNewGame();
         //StartRound();
     }
+    private void Start()
+    {
+        audioManager = AudioManager.instance;
+    }
 
     public void StartNewGame()
     {
@@ -294,6 +302,7 @@ public class GameManager : NetworkBehaviour
         showReadyButtonClientRpc();
         StartButton.SetActive(false);
         syncDeckData = true;
+        playSoundClientRpc("CardShuffle");
     }
 
     public override void OnNetworkSpawn()
@@ -426,15 +435,24 @@ public class GameManager : NetworkBehaviour
     }
 
     [ClientRpc]
+    public void playSoundClientRpc(string name)
+    {
+        audioManager.Play(name);
+    }
+
+    [ClientRpc]
     public void showReadyButtonClientRpc()
     {
+        generalText.text = "MEMORISE the bottom cards and click READY when done";
         ReadyButton.SetActive(true);
     }
 
     public void ready()
     {
+        generalText.text = "";
         setReadyRpc(playerId);
         ReadyButton.SetActive(false);
+        audioManager.Play("CardFlip");
     }
 
     [Rpc(SendTo.Server)]
@@ -462,7 +480,14 @@ public class GameManager : NetworkBehaviour
     {
         startTurn = false;
         currentTurnPlayerId = pID;
-        if (playerId == pID) { canPickFromDeckOrStack = true; }
+        if (playerId == pID) { 
+            canPickFromDeckOrStack = true;
+            generalText.text = "Pick a card from DECK or STACK";
+        }
+        else
+        {
+            generalText.text = "";
+        }
     }
 
     [ClientRpc]
@@ -516,6 +541,7 @@ public class GameManager : NetworkBehaviour
                 Deck[i].setOwner((owner)pID + 6);
                 Deck[i].setPosition(position.None);
                 Deck[i].showCard((owner)pID);
+                playSoundClientRpc("CardPick");
                 break;
             }
         }
@@ -528,6 +554,7 @@ public class GameManager : NetworkBehaviour
         Deck[topStackCardIndex].setOwner((owner)pID + 6);
         Deck[topStackCardIndex].setPosition(position.None);
         Deck[topStackCardIndex].showCard(owner.Stack);
+        playSoundClientRpc("CardPick");
 
         syncDeckData = true;
     }
@@ -580,11 +607,25 @@ public class GameManager : NetworkBehaviour
                 Deck[i].setOwner((owner)pID);
                 Deck[i].setPosition(position);
                 Deck[i].showCard(owner.None);
+                playSoundClientRpc("CardReplacing");
                 break;
             }
         }
+        updateGeneralTextClientRpc("Replaced a card");
         startTimerClientRpc();
         syncDeckData = true;
+    }
+
+    [ClientRpc]
+    public void updateGeneralTextClientRpc(string text)
+    {
+        generalText.text = text;
+    }
+
+    [Rpc(SendTo.Server)]
+    public void updateGeneralTextRpc(string text)
+    {
+        updateGeneralTextClientRpc(text);
     }
 
     [Rpc(SendTo.Server)]
@@ -602,6 +643,7 @@ public class GameManager : NetworkBehaviour
                 stackedCardLayerOrder += 1;
                 skipCardIndex = i;
                 topStackCardIndex = i;
+                playSoundClientRpc("CardPlacing");
                 break;
             }
         }
@@ -630,6 +672,7 @@ public class GameManager : NetworkBehaviour
         }
         else
         {
+            updateGeneralTextClientRpc("Placed on stack");
             startTimerClientRpc();
         }
     }
@@ -639,6 +682,7 @@ public class GameManager : NetworkBehaviour
     {
         if (pID == playerId)
         {
+            generalText.text = "Power of 7/8 (See Own card): Click on one of your cards to see it";
             canSeeSelfCard = true;
             DoneButton.SetActive(true);
         }
@@ -649,6 +693,7 @@ public class GameManager : NetworkBehaviour
     {
         if (pID == playerId)
         {
+            generalText.text = "Power of 9/10 (See Others Card): Click on one of others cards to see it";
             canSeeOthersCard = true;
             DoneButton.SetActive(true);
         }
@@ -659,6 +704,7 @@ public class GameManager : NetworkBehaviour
     {
         if (pID == playerId)
         {
+            generalText.text = "Power of Q (Seen-Swap): Click on one of others cards to see it and could swap with one of your card.";
             canSeenSwap = true;
             canSeeOthersCard = true;
             SkipButton.SetActive(true);
@@ -671,6 +717,7 @@ public class GameManager : NetworkBehaviour
     {
         if (pID == playerId)
         {
+            generalText.text = "Power of J (Swap): Click on one of others cards and could swap with one of your card.";
             canUnseenSwap = true;
             SkipButton.SetActive(true);
             SwapButton.SetActive(true);
@@ -689,6 +736,7 @@ public class GameManager : NetworkBehaviour
         Deck[index].setOwner(showTo + 6);
         Deck[index].setPosition(position.None);
         Deck[index].showCard(showTo);
+        playSoundClientRpc("CardPicking");
         syncDeckData = true;
     }
 
@@ -705,6 +753,7 @@ public class GameManager : NetworkBehaviour
             originalPosition = position.None;
             syncSeenCardIndexClientRpc(seenCardIndex);
             syncSeenCardDataClientRpc(originalOwner, originalPosition);
+            playSoundClientRpc("CardPlacing");
             syncDeckData = true;
         }
     }
@@ -758,6 +807,8 @@ public class GameManager : NetworkBehaviour
             syncOthersSwapCardIndexClientRpc(othersSwapCardIndex);
             hideSwapAndSkipButtonsClientRpc(currentTurnPlayerId);
             startTimerClientRpc();
+            updateGeneralTextClientRpc("Swapped");
+            playSoundClientRpc("CardReplacing");
             syncDeckData = true;
         }
 
@@ -778,10 +829,13 @@ public class GameManager : NetworkBehaviour
         hideCardRpc();
         hideSwapAndSkipButtonsClientRpc(currentTurnPlayerId);
         startTimerClientRpc();
+        updateGeneralTextClientRpc("Skipped");
     }
 
     public void doneButton()
     {
+        canSeeSelfCard = false;
+        canSeeOthersCard = false;
         doneWithSpecialCardPowersRpc();
         DoneButton.SetActive(false);
     }
@@ -794,14 +848,18 @@ public class GameManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    public void startTimerClientRpc() { t = 3; }
+    public void startTimerClientRpc() { t = 4; generalText.text = "STACKing time"; }
 
     [ClientRpc]
     public void setCanGiveOtherACardClientRpc(ulong pID)
     {
         if (playerId == pID)
         {
-            if(hasCard(pID)) canGiveOtherACard = true;
+            if (hasCard(pID))
+            {
+                canGiveOtherACard = true;
+                updateGeneralTextRpc(playerNames[playerId-1] + "(" + playerId.ToString() + ")" + "should give one card to " + playerNames[(ulong)otherPlayerToBeGivenCard[0]-1] + "(" + otherPlayerToBeGivenCard[0].ToString() + ")");
+            }
         }
     }
 
@@ -854,10 +912,13 @@ public class GameManager : NetworkBehaviour
                 Deck[toBeStackedIndex].setLayerOrder(stackedCardLayerOrder);
                 stackedCardLayerOrder += 1;
                 topStackCardIndex = toBeStackedIndex;
+                updateGeneralTextClientRpc("Stacked by "+ playerNames[pID-1] + "(" + pID.ToString() + ")");
+                playSoundClientRpc("CardPlacing");
             }
             else
             {
                 Deck[toBeStackedIndex].showCard(owner.Stack);
+                updateGeneralTextClientRpc("Invalid attempt of stacked by "+ playerNames[pID-1] + "(" + pID.ToString() + ")");
                 givePenaltyCardRpc(pID);
             }
         }
@@ -873,6 +934,7 @@ public class GameManager : NetworkBehaviour
         Deck[cardToBeGivenIndex].setPosition(otherPlayerPositionToBeGivenCard[numberOfOtherPlayerGivenCard]);
         Deck[cardToBeGivenIndex].showCard(owner.None);
         numberOfOtherPlayerGivenCard += 1;
+        updateGeneralTextClientRpc(playerNames[playerId-1] + "(" + playerId.ToString() + ")" + "should give one card to " + playerNames[(ulong)otherPlayerToBeGivenCard[0]-1] + "(" + otherPlayerToBeGivenCard[0].ToString() + ")");
         if (numberOfOtherPlayerGivenCard == numberOfOtherPlayerToBeGivenCard || !hasCard(stackOwnerPlayerId))
         {
             resetCanGiveOtherACardClientRpc(stackOwnerPlayerId);
@@ -880,6 +942,7 @@ public class GameManager : NetworkBehaviour
             otherPlayerPositionToBeGivenCard = new position[3];
             numberOfOtherPlayerToBeGivenCard = 0;
             numberOfOtherPlayerGivenCard = 0;
+            playSoundClientRpc("CardPlacing");
             stopTurnRpc();
         }
         syncDeckData = true;
@@ -933,6 +996,7 @@ public class GameManager : NetworkBehaviour
         Deck[topDeckCardIndex].setOwner((owner)pID);
         Deck[topDeckCardIndex].setPosition(position.PenaltyOne + penaltyIndex);
         Deck[topDeckCardIndex].showCard(owner.None);
+        playSoundClientRpc("Error");
 
         syncDeckData = true;
     }
@@ -952,27 +1016,33 @@ public class GameManager : NetworkBehaviour
 
 
     [Rpc(SendTo.Server)]
-    public void stopTurnRpc()
+    public void stopTurnRpc() //Fix condition when other player ends card
     {
-        if(!hasCard(currentTurnPlayerId) && kaboCalledByPlayerId == 0)
+        updateGeneralTextClientRpc("");
+        if (cardFinishedAtPlayerTurnId == 0)
+        {
+            for (int i = 0; i < numberOfPlayers; i++)
+            {
+                if (!hasCard((ulong)i + 1)) { cardFinishedRpc(currentTurnPlayerId); break; }
+            }
+        }
+
+        /*if(!hasCard(currentTurnPlayerId) && kaboCalledByPlayerId == 0)
         {
             kaboCalledRpc(currentTurnPlayerId);
+        }*/
+        hidePlayerCardsRpc();
+        stackOwnerPlayerId = 0;
+        currentTurnPlayerId += 1;
+        if (currentTurnPlayerId == 5) { currentTurnPlayerId = 1; }
+        if (currentTurnPlayerId != kaboCalledByPlayerId && currentTurnPlayerId != cardFinishedAtPlayerTurnId)
+        {
+            startTurnClientRpc(currentTurnPlayerId);
         }
         else
         {
-            hidePlayerCardsRpc();
-            stackOwnerPlayerId = 0;
-            currentTurnPlayerId += 1;
-            if (currentTurnPlayerId == 5) { currentTurnPlayerId = 1; }
-            if (currentTurnPlayerId != kaboCalledByPlayerId)
-            {
-                startTurnClientRpc(currentTurnPlayerId);
-            }
-            else
-            {
-                //showResult
-                calculateScoresRpc();
-            }
+            //showResult
+            calculateScoresRpc();
         }
         
     }
@@ -1004,33 +1074,44 @@ public class GameManager : NetworkBehaviour
             }
         }
 
-        bool hasKaboCalledPlayerWon = true;
-
-        for(int i=0; i< currentRoundPlayerScore.Length; i++)
+        if (kaboCalledByPlayerId != 0)
         {
-            if (hasCard(kaboCalledByPlayerId) && (i + 1) != (int)kaboCalledByPlayerId) 
+            bool hasKaboCalledPlayerWon = true;
+
+            for (int i = 0; i < currentRoundPlayerScore.Length; i++)
             {
-                if (currentRoundPlayerScore[(int)kaboCalledByPlayerId - 1] >= currentRoundPlayerScore[i]) { hasKaboCalledPlayerWon = false; break; }
+                if (hasCard(kaboCalledByPlayerId) && (i + 1) != (int)kaboCalledByPlayerId)
+                {
+                    if (currentRoundPlayerScore[(int)kaboCalledByPlayerId - 1] >= currentRoundPlayerScore[i]) { hasKaboCalledPlayerWon = false; break; }
+                }
+            }
+
+            if (!hasKaboCalledPlayerWon)
+            {
+                int maxScore = 0;
+                for (int i = 0; i < currentRoundPlayerScore.Length; i++)
+                {
+                    if (currentRoundPlayerScore[i] > maxScore && (i + 1) != (int)kaboCalledByPlayerId) { maxScore = currentRoundPlayerScore[i]; }
+                }
+                currentRoundPlayerScore[(int)kaboCalledByPlayerId - 1] = maxScore;
+            }
+            for (int i = 0; i < playerScore.Length; i++)
+            {
+                if (currentRoundPlayerScore[i] < 0 || (!hasKaboCalledPlayerWon && (i + 1) != (int)kaboCalledByPlayerId)) currentRoundPlayerScore[i] = 0;
+                playerScore[i] += currentRoundPlayerScore[i];
+                if (playerScore[i] >= 100) isGameOver = true;
             }
         }
-        
-        if (!hasKaboCalledPlayerWon)
+        else
         {
-            int maxScore = 0;
-            for(int i=0; i< currentRoundPlayerScore.Length;i++)
+            for (int i = 0; i < playerScore.Length; i++)
             {
-                if (currentRoundPlayerScore[i] > maxScore && (i + 1) != (int)kaboCalledByPlayerId) { maxScore = currentRoundPlayerScore[i];}
+                if (currentRoundPlayerScore[i] < 0) currentRoundPlayerScore[i] = 0;
+                playerScore[i] += currentRoundPlayerScore[i];
+                if (playerScore[i] >= 100) isGameOver = true;
             }
-            currentRoundPlayerScore[(int)kaboCalledByPlayerId - 1] = maxScore;
         }
 
-        for(int i=0; i<playerScore.Length; i++)
-        {
-            if (currentRoundPlayerScore[i]<0 || (!hasKaboCalledPlayerWon && (i + 1) != (int)kaboCalledByPlayerId)) currentRoundPlayerScore[i] = 0;
-            playerScore[i] += currentRoundPlayerScore[i];
-            if (playerScore[i]>=100) isGameOver=true;
-        }
-        
         showResultClientRpc(playerScore, currentRoundPlayerScore, isGameOver);
         syncDeckData = true;
     }
@@ -1062,15 +1143,25 @@ public class GameManager : NetworkBehaviour
             }
         }
         ShuffleDeck(Deck);
+        syncDeckData=true;
+        playSoundClientRpc("CardShuffle");
     }
 
     [Rpc(SendTo.Server)]
     public void kaboCalledRpc(ulong pID)
     {
         Debug.Log("Kabo is called by " + pID);
-        stopTurnRpc();
         kaboCalledByPlayerId = pID;
+        playSoundClientRpc("Kabo");
+        stopTurnRpc();
         kaboCalledClientRpc(pID);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void cardFinishedRpc(ulong pID)
+    {
+        Debug.Log("Card Finished at: " + pID);
+        cardFinishedAtPlayerTurnId = pID;
     }
 
     [ClientRpc]
@@ -1112,16 +1203,21 @@ public class GameManager : NetworkBehaviour
                 }
             }
 
-            if (t > 0) { t -= Time.deltaTime; canStack = true; }
+            if (t > 0) { 
+                t -= Time.deltaTime;
+                canStack = true; 
+                timerText.gameObject.SetActive(true);
+            }
             else
             {
+                timerText.gameObject.SetActive(false);
                 if (canStack)
                 {
                     canStack = false;
                     if (IsServer && playerId == 1)
                     {
-                        if (numberOfOtherPlayerToBeGivenCard == 0) stopTurnRpc();
-                        else setCanGiveOtherACardClientRpc(stackOwnerPlayerId);
+                        if (numberOfOtherPlayerToBeGivenCard != 0 && hasCard(stackOwnerPlayerId)) setCanGiveOtherACardClientRpc(stackOwnerPlayerId);
+                        else stopTurnRpc();
                     }
                 }
             }

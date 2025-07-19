@@ -60,12 +60,12 @@ public class CardManager : MonoBehaviour
                     {
                         Vector3 position = cardSlot[i].transform.position;
                         float angle = cardSlot[i].transform.eulerAngles.z;
-                        this.transform.position = Vector3.MoveTowards(this.transform.position, new Vector3(position.x + positionXRandomness, position.y + positionYRandomness, position.z), 0.1f);
+                        this.transform.position = Vector3.MoveTowards(this.transform.position, new Vector3(position.x + positionXRandomness, position.y + positionYRandomness, position.z), 0.08f);
                         this.transform.eulerAngles = new Vector3(0f, 0f, angle + rotationRandomness);
                     }
                     else if ((slotManager.getOwner() == card.getOwner()) && (slotManager.getPosition() == card.getPosition()))
                     {
-                        this.transform.position = Vector3.MoveTowards(this.transform.position, cardSlot[i].transform.position, 0.1f);
+                        this.transform.position = Vector3.MoveTowards(this.transform.position, cardSlot[i].transform.position, 0.08f);
                         this.transform.eulerAngles = new Vector3(0f, 0f, cardSlot[i].transform.eulerAngles.z);
                     }
                 }
@@ -85,4 +85,6 @@ public class CardManager : MonoBehaviour
             transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sortingOrder = card.getLayerOrder();
         }
     }
+
+
 }

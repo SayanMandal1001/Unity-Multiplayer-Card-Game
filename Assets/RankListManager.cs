@@ -18,7 +18,7 @@ public class RankListManager : MonoBehaviour
         for(int i = 0; i < rankScore.Length; i++)
         {
             Transform rankObject = transform.GetChild(i);
-            rankObject.GetChild(1).gameObject.GetComponent<Text>().text = rankPlayerId[i].ToString();
+            rankObject.GetChild(1).gameObject.GetComponent<Text>().text = gameManager.playerNames[rankPlayerId[i]-1];
             rankObject.GetChild(2).gameObject.GetComponent<Text>().text = rankScore[i].ToString() + " (" + currentRankScore[i].ToString() + ")";
         }
     }
@@ -30,7 +30,7 @@ public class RankListManager : MonoBehaviour
         {
             for (int j = i; j < rankScore.Length; j++) 
             {
-                if (rankScore[i] < rankPlayerId[j])
+                if (rankScore[i] > rankScore[j])
                 {
                     (rankScore[i], rankScore[j]) = (rankScore[j], rankScore[i]);
                     (currentRankScore[i], currentRankScore[j]) = (currentRankScore[j], currentRankScore[i]);

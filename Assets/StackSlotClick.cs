@@ -35,6 +35,7 @@ public class StackSlotClick : MonoBehaviour
                 if (gameManager.getCurrentTurnPlayerId() == gameManager.playerId && gameManager.canPickFromDeckOrStack)
                 {
                     Debug.Log("Picked a card from stack");
+                    gameManager.generalText.text = "Replace the card with one of your card";
                     gameManager.getTopStackCardRpc(gameManager.playerId);
                     gameManager.canReplace = true;
                     gameManager.canPickFromDeckOrStack = false;
@@ -42,7 +43,7 @@ public class StackSlotClick : MonoBehaviour
                 }
             }
 
-            if (gameManager.canSkip)
+            if (gameManager.canSkip && gameManager.startRounds)
             {
                 Debug.Log("Placing the card on stack");
                 gameManager.skipCardRpc();

@@ -34,6 +34,7 @@ public class DeckSlotClick : MonoBehaviour
                 if (gameManager.getCurrentTurnPlayerId() == gameManager.playerId && gameManager.canPickFromDeckOrStack)
                 {
                     Debug.Log("Picked a card from deck");
+                    gameManager.generalText.text = "Either replace the card with one of your card or place it in the stack";
                     gameManager.getTopDeckCardRpc(gameManager.playerId);
                     gameManager.canReplace = true;
                     gameManager.canSkip = true;
