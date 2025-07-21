@@ -164,7 +164,7 @@ public class GameManager : NetworkBehaviour
     public GameObject DoneButton;
     public GameObject SkipButton;
     public GameObject SwapButton;
-    public Text generalText;
+    public TextMeshProUGUI generalText;
 
     public GameObject GameOverPanel;
     public WaitingAreaUIManager waitingAreaUIManager;
