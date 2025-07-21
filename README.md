@@ -17,15 +17,19 @@ This is a project for the Summer Of Code (SOC) 2025 under the guidance of mentor
 
 ## Instructions to run the game(application)
 
+- For PC
+
 1. Clone the repository:
     ```bash
     git clone "https://github.com/SayanMandal1001/Unity-Multiplayer-Card-Game"
     ```
-2. Locate the folder "Kabo"
+2. Locate the folder "Kabo(PC)"
     ```bash
-    cd Kabo
+    cd Kabo(PC)
     ```
 3. Run the .exe file present in it
     ```bash
     ./Kabo.exe
     ```
+
+-For Mobile, install the apk file in the Kabo(Mobile) folder.
